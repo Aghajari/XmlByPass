@@ -28,7 +28,7 @@ Why should we use XML layouts?
 How `LayoutInflater` inflates a Layout?
 
 Android pre-compiles every layout but still needs to hold the original xml file, why? cause needs to generate a suitable LayoutParams for container.
-So, in step of inflation we always are parsing the XML by using [`XmlPullParser`](http://www.xmlpull.org/), but ofc android has written it's own customized parser with native codes (C) which makes it a little faster. Anyway, We never can ignore the fact that creating instance of views are done by reflection (`LayoutInflater#createView(Context, String, String, AttributeSet)`). And without `ViewBinding`, everytime we want to find a `View` we call `View#findViewById(int)` which needs to iterate all childs (including childs of it's child :D)
+So, in step of inflation we are always parsing the XML by using [`XmlPullParser`](http://www.xmlpull.org/), but ofc android has written it's own customized parser with native codes (C) which makes it a little faster. Anyway, We never can ignore the fact that creating instance of views are done by reflection (`LayoutInflater#createView(Context, String, String, AttributeSet)`). And without `ViewBinding`, everytime we want to find a `View` we call `View#findViewById(int)` which needs to iterate all childs (including childs of it's child :D)
 
 As [Andrii Drobiazko](https://medium.com/@c2q9450/performance-comparison-building-android-ui-with-code-anko-vs-xml-layout-cc0abb21c561) wrotes: 
 
@@ -47,6 +47,10 @@ As [Andrii Drobiazko](https://medium.com/@c2q9450/performance-comparison-buildin
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Qualifiers](#qualifiers)
+- [ViewModel](#viewmodel)
+- [Custom Attribute](#custom-attribute)
+- [Performance](#performance)
 - [Author](#author)
 - [License](#license)
  
@@ -213,3 +217,293 @@ This helps you to implement [MVVM](https://www.geeksforgeeks.org/mvvm-model-view
         @XmlLayout(layout = "activity_main", className = "ActivityMain", viewModel = "ActivityMainViewModel"),
 }, viewModel = true)
 ```
+
+## Qualifiers
+
+<img src="./images/qualifiers.gif" width=300 title="GIF">
+
+This is just a simple test for [qualifiers](https://developer.android.com/guide/topics/resources/providing-resources), Two layouts are made. One for the landscape mode in `layout-land` folder, and another one for other configs in `layout` folder with same name.
+
+This is the generated java code condition: 
+```java
+if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+   init_land();
+else
+   init();
+```
+
+And this is the way you can customize it in code with a simple inheritance :
+
+```java
+@XmlByPass(layouts = {
+        @XmlLayout(layout = "activity_main", className = "ActivityMain")
+})
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(new ActivityMain(this) {
+            @Override
+            protected void init_land() {
+                super.init_land();
+                setBackgroundColor(Color.RED);
+            }
+        });
+    }
+}
+```
+
+<img src="./images/customized.png" width=300 title="Image">
+
+By the way, In the example above, on bottom you can see a constraint layout with a simple TextView and a SmileView which both of them are added to the layout by `<include/>`
+
+## ViewModel
+**XmlByPass** will automatically generate ViewModels for your layout which extends `androidx.lifecycle.ViewModel` and contains some LiveData variables.
+
+To use this feature, you must follow a specific structure in your xml so that **XmlByPass** can define variables correctly.
+
+This structure is very simple and can be created by just adding a few tags to the views.
+
+A quick review: 
+
+> By `viewModel` you can specify whether **XmlByPass** should generate a [`ViewModel`](https://developer.android.com/topic/libraries/architecture/viewmodel) class (Using [`LiveData`](https://developer.android.com/topic/libraries/architecture/livedata)) or not.
+>
+> This helps you to implement [MVVM](https://www.geeksforgeeks.org/mvvm-model-view-viewmodel-architecture-pattern-in-android/) architecture easier than before, by only a single xml layout file.
+> ```java
+> @XmlByPass(layouts = {
+>         @XmlLayout(layout = "activity_main", className = "ActivityMain", viewModel = "ActivityMainViewModel"),
+> }, viewModel = true)
+> ```
+
+Consider the following layout:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="Hello World!"/>
+
+</RelativeLayout>
+```
+
+Ok, now see this one:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+ 
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+     
+     <tag android:id="@+id/myText" android:value="live;attr=text;Hello World!"/>
+    </TextView>
+
+</RelativeLayout>
+```
+
+We just added a tag to the TextView :
+```xml
+<tag android:id="@+id/myText" android:value="live;attr=text;Hello World!"/>
+```
+
+- `android:id` name specifies the name of the variable
+- `android:value` starts with `live;` so **XmlByPass** can undrestand this tag will be a LiveData
+- `attr=text` means the target attribute is setText(String)
+- `Hello World!` is the initial value of variable
+
+The generated ViewModel:
+```java
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+
+public class MyViewModel extends ViewModel {
+
+	MutableLiveData<String> myText = new MutableLiveData<>("Hello World!");
+
+	public LiveData<String> getMyText() {
+		return myText;
+	}
+
+	public void setMyText(String value) {
+		myText.setValue(value);
+	}
+
+}
+```
+
+And tv observes myText in generated code of layout (YOU DON'T NEED TO KNOW ABOUT IT):
+```java
+MyViewModel viewModel = new ViewModelProvider(getViewModelOwner()).get(MyViewModel.class);
+viewModel.getMyText().observe(getOwner(), myText -> tv.setText(myText));
+```
+
+And this is how you can change data in MainActivity:
+```java
+MyViewModel viewModel = new ViewModelProvider(this).get(MyViewModel.class);
+viewModel.setMyText("Awesome!");
+```
+
+**I prefer to define variables first and the use them later.**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+ 
+    <tag android:id="@+id/myText" android:value="live;type=string;Hello World!"/>
+ 
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+     
+     <tag android:id="@+id/myText" android:value="live;func=setText"/>
+    </TextView>
+
+</RelativeLayout>
+```
+
+This line defines a new LiveData variable with type of `String` :
+```xml
+<tag android:id="@+id/myText" android:value="live;type=string;Hello World!"/>
+```
+
+And this one observes tv to myText (The variable that we just defined) and connects it to the `setText` function:
+```xml
+<tag android:id="@+id/myText" android:value="live;func=setText"/>
+```
+
+**Let's start using a custom type!**
+
+Consider the following model:
+```java
+package com.example;
+
+public class User {
+
+    public String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+}
+```
+
+And this is your xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+ 
+    <tag android:id="@+id/user" android:value="live;type=com.example.User"/>
+ 
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+     
+     <tag android:id="@+id/user" android:value="live;src=setText(user.name)"/>
+    </TextView>
+
+</RelativeLayout>
+```
+
+This line defines a new LiveData variable with type of `com.example.User` :
+```xml
+<tag android:id="@+id/user" android:value="live;type=com.example.User"/>
+```
+
+And this one observes tv to the variable and connects it to the `setText` function with the specified source:
+```xml
+<tag android:id="@+id/user" android:value="live;src=setText(user.name)"/>
+```
+
+
+So view can observe a variable in 3 ways: `src`, `func` and `attr`
+
+## Custom Attribute
+
+As i said before, **XmlByPass** will generate style resource for unknown attributes. but you can pre define them if you needed to by using `@XmlByPassAttr`:
+
+For example:
+```java
+@XmlByPassAttr(name = "app:color", format = "color")
+public class MainActivity extends AppCompatActivity {
+```
+This means that there is a `setColor(int)` function in the views that use this attribute
+
+```java
+@XmlByPassAttr(name = "app:color", format = "color", codeName = "backgroundColor")
+```
+This means that there is a `setBackgroundColor(int)` function in the views that use this attribute
+
+```java
+@XmlByPassAttr(name = "app:color", format = "color", enums = {
+        @XmlByPassAttrEnum(key = "black", value = "Color.BLACK"),
+        @XmlByPassAttrEnum(key = "white", value = "Color.WHITE")
+})
+```
+This means that there is a `setColor(int)` function in the views that use this attribute and **enums** are replaced by their value.
+
+## Performance
+This library does not optimize your code, but overwrites it with Java code so that there are no more xml interfaces. If you follow the principles of designing layouts, you can be sure that you will have the highest performance :)
+
+Follow these steps:
+
+- Avoid adding useless parents.
+- Avoid ConstraintLayout as long as you can replace it with FrameLayout or LinearLayout. ([Read more](https://medium.com/android-news/constraint-layout-performance-870e5f238100))
+- Avoid nested layouts and find the best ViewGroup for your position.
+
+
+
+## Author
+Amir Hossein Aghajari
+
+### SUPPORT ❤️
+If you find this library useful, Support it by joining [**stargazers**](https://github.com/aghajari/XmlByPass/stargazers) for this repository ⭐️
+
+
+License
+=======
+
+    Copyright 2022 Amir Hossein Aghajari
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+<br>
+<div align="center">
+  <img width="64" alt="LCoders | AmirHosseinAghajari" src="https://user-images.githubusercontent.com/30867537/90538314-a0a79200-e193-11ea-8d90-0a3576e28a18.png">
+  <br><a>Amir Hossein Aghajari</a> • <a href="mailto:amirhossein.aghajari.82@gmail.com">Email</a> • <a href="https://github.com/Aghajari">GitHub</a>
+</div>
