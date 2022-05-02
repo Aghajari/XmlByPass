@@ -54,13 +54,13 @@ As [Andrii Drobiazko](https://medium.com/@c2q9450/performance-comparison-buildin
  
 **XmlByPass** is an annotationProcessor library for Android which auto generates the java code of your xml layouts in `Source` level (before compile). That means, you can create your layouts easily and quickly with XML and get all benefits of using xml/resources meanwhile get the performance of creating views programmatically without even knowing about it! (I'm not joking , you don't need to learn anything new :))
  
-**XmlByPass** supports almost 99% of tags and attributes of XML layouts including `<include>` and `<fragment>`, And for other 1%, it will auto generate an style resource and applies the style to the views. That's how you can be sure it will 100% work.
+**XmlByPass** supports almost 99% of tags and attributes of XML layouts including `<include/>` and `<fragment/>`, And for other 1%, it will auto generate an style resource and applies the style to the views. That's how you can be sure it will 100% work.
 
 No need to worry about ViewBinding, **XmlByPass** adds views that have an `android:id` with their ID name as Public variables and other views are protected so still you can customize them by inheritance. (You will see sample codes in Usage)
 
 **XmlByPass** supports all [qualifiers](https://developer.android.com/guide/topics/resources/providing-resources). Yay!
 
-And one more interesting option, **XmlByPass** brings auto generating `ViewModel` with `LiveData` :)
+And one more interesting option, **XmlByPass** brings auto generating [`ViewModel`](https://developer.android.com/topic/libraries/architecture/viewmodel) with [`LiveData`](https://developer.android.com/topic/libraries/architecture/livedata) :)
 
 ## Usage
 
@@ -74,7 +74,7 @@ This is `activity_main` (xml layout):
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
     
     <TextView
         android:id="@+id/tv"
@@ -100,4 +100,116 @@ public class MainActivity extends AppCompatActivity {
     }
 
 }
+```
+
+Alright, Let's include **XmlByPass**, You won't need to change xml layout at all! but this is gonna be how your MainActivity looks like: 
+```java
+@XmlByPass(layouts = {
+        @XmlLayout(layout = "activity_main", className = "ActivityMain")
+})
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(new ActivityMain(this));
+    }
+
+}
+```
+
+**XmlByPass** will generate `ActivityMain` automatically, This is how the generated class looks like:
+
+<details><summary><b>ActivityMain.java</b></summary>
+<p>
+ 
+```java
+import android.content.Context;
+import android.util.AttributeSet;
+import android.widget.TextView;
+
+import androidx.constraintlayout.widget.ConstraintLayout;
+
+public class ActivityMain extends ConstraintLayout {
+
+    public TextView tv;
+
+    public ActivityMain(Context context) {
+        this(context, null);
+    }
+
+    public ActivityMain(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public ActivityMain(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+
+        init();
+    }
+
+    protected void init() {
+        initThis();
+        initTv();
+    }
+
+    protected void initThis() {
+        this.setLayoutParams(new ConstraintLayout.LayoutParams(-1, -1));
+    }
+
+    protected void initTv() {
+        tv = new TextView(getContext());
+        tv.setId(R.id.tv);
+        tv.setText("Hello World!");
+        ConstraintLayout.LayoutParams tv_lp = new ConstraintLayout.LayoutParams(-2, -2);
+        tv_lp.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+        tv_lp.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        tv_lp.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        tv_lp.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+        this.addView(tv, tv_lp);
+    }
+
+}
+```
+</p></details>
+
+---
+<p align="center"><b>That's it!</b></p>
+
+---
+
+By `@XmlLayout(layout = "*")` you can mark all layouts, the class name will be the name of it's layout file .
+
+```java
+@XmlByPass(layouts = {@XmlLayout(layout = "*")})
+public class MainActivity extends AppCompatActivity {
+```
+
+By `packageName` you can set pacakgeName of generated java classes, 
+Do not forget to set main package name of your app for R.class
+
+```java
+@XmlByPass(layouts = {...}, packageName = "com.example.layouts", R = "com.example")
+```
+
+By `include` you can specify whether **XmlByPass** should generate java class for included layouts or not ([`<include/>`](https://developer.android.com/training/improving-layouts/reusing-layouts), it is `true` by default)
+
+```java
+@XmlByPass(layouts = {...}, include = true)
+```
+
+By `styleable` you can specify whether **XmlByPass** should generate style resource for unknown attributes or not (it is `false` by default)
+
+*Note:* If you enabled the styleable, you may need compile your code twice for the first time, android will load resources first, so you need a second try to import the generated style file.
+```java
+@XmlByPass(layouts = {...}, styleable = true)
+```
+
+By `viewModel` you can specify whether **XmlByPass** should generate a [`ViewModel`](https://developer.android.com/topic/libraries/architecture/viewmodel) class (Using [`LiveData`](https://developer.android.com/topic/libraries/architecture/livedata)) or not.
+
+This helps you to implement [MVVM](https://www.geeksforgeeks.org/mvvm-model-view-viewmodel-architecture-pattern-in-android/) architecture easier than before, by only a single xml layout file.
+```java
+@XmlByPass(layouts = {
+        @XmlLayout(layout = "activity_main", className = "ActivityMain", viewModel = "ActivityMainViewModel"),
+}, viewModel = true)
 ```
