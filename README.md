@@ -1,7 +1,7 @@
 # XmlByPass
  
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.aghajari/XmlByPass.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.aghajari/XmlByPass/1.0.0/aar)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.aghajari/XmlByPass.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.aghajari/XmlByPass/1.0.1/aar)
 [![Join the chat at https://gitter.im/Aghajari/community](https://badges.gitter.im/Aghajari/community.svg)](https://gitter.im/Aghajari/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Get the Highest Android UI performance!
@@ -75,8 +75,8 @@ And one more interesting option, **XmlByPass** brings auto generating [`ViewMode
 XmlByPass is available in the `mavenCentral()`, so you just need to add it as a dependency (Module gradle)
 
 ```gradle
-annotationProcessor 'io.github.aghajari:XmlByPass:1.0.0'
-implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.0'
+annotationProcessor 'io.github.aghajari:XmlByPass:1.0.1'
+implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.1'
 ```
 
 ## Usage
