@@ -1,0 +1,85 @@
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+task sourcesJar(type: Jar) {
+    from project.convention.getPlugin(JavaPluginConvention).sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc2(type: Javadoc) {
+    source = project.convention.getPlugin(JavaPluginConvention).sourceSets.main.java.srcDirs
+    classpath += configurations.compile
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc2) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+signing {
+    useInMemoryPgpKeys(
+            rootProject.ext["signing.keyId"],
+            rootProject.ext["signing.key"],
+            rootProject.ext["signing.password"],
+    )
+    sign publishing.publications
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('charSet', 'UTF-8')
+}
+
+def artifact = new Properties()
+artifact.load(new FileInputStream(rootProject.rootDir.getAbsolutePath() + "/deploy.settings"))
+
+version = artifact.version
+group = artifact.groupId
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId artifact.groupId
+                artifactId artifact.id2
+                version artifact.version
+                from components[0]
+
+                pom {
+                    name = artifact.id2
+                    packaging = 'aar'
+                    description = artifact.desc
+                    url = artifact.siteUrl
+
+                    scm {
+                        connection = artifact.gitUrl
+                        developerConnection = artifact.gitUrl
+                        url = artifact.siteUrl
+                    }
+
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'Aghajari'
+                            name = 'AmirHossein Aghajari'
+                            email = 'amirhossein.aghajari.82@gmail.com'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

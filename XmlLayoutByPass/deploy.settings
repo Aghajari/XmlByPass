@@ -1,0 +1,10 @@
+siteUrl = https://github.com/Aghajari/XmlByPass
+gitUrl = https://github.com/Aghajari/XmlByPass.git
+version = 1.0.0
+groupId = io.github.aghajari
+licenses = ['Apache-2.0']
+id = XmlByPass
+id2 = XmlByPassAnnotations
+name = XmlByPass
+author = Amir Hossein Aghajari
+desc = Get the Highest Android UI performance! XmlByPass is an annotationProcessor library for Android which auto generates the java code of your xml layouts in Source level (before compile)
