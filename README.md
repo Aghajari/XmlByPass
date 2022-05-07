@@ -1,5 +1,9 @@
 # XmlByPass
  
+[![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.aghajari/XmlByPass.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.aghajari/XmlByPass/1.0.0/aar)
+[![Join the chat at https://gitter.im/Aghajari/community](https://badges.gitter.im/Aghajari/community.svg)](https://gitter.im/Aghajari/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Get the Highest Android UI performance!
 
 With  **XmlByPass** you won't need to learn any new thing! just use  **XmlByPass** to get the highest performance from your Xml layouts.
@@ -65,6 +69,15 @@ No need to worry about ViewBinding, **XmlByPass** adds views that have an `andro
 **XmlByPass** supports all [qualifiers](https://developer.android.com/guide/topics/resources/providing-resources). Yay!
 
 And one more interesting option, **XmlByPass** brings auto generating [`ViewModel`](https://developer.android.com/topic/libraries/architecture/viewmodel) with [`LiveData`](https://developer.android.com/topic/libraries/architecture/livedata) :)
+
+## Installation
+
+XmlByPass is available in the `mavenCentral()`, so you just need to add it as a dependency (Module gradle)
+
+```gradle
+annotationProcessor 'io.github.aghajari:XmlByPass:1.0.0'
+implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.0'
+```
 
 ## Usage
 
