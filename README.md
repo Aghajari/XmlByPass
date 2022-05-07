@@ -142,6 +142,9 @@ Alright, Let's include **XmlByPass**, You won't need to change your xml layout a
 <p>
 	
 ```java
+import com.aghajari.xmlbypass.XmlByPass;
+import com.aghajari.xmlbypass.XmlLayout;
+	
 @XmlByPass(layouts = {
         @XmlLayout(layout = "activity_main", className = "ActivityMain")
 })
@@ -158,6 +161,9 @@ public class MainActivity extends AppCompatActivity {
 <p>
 	
 ```kotlin
+import com.aghajari.xmlbypass.XmlByPass
+import com.aghajari.xmlbypass.XmlLayout
+
 @XmlByPass(layouts = {
         @XmlLayout(layout = "activity_main", className = "ActivityMain")
 })
