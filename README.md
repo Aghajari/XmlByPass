@@ -56,9 +56,9 @@ As [Andrii Drobiazko](https://medium.com/@c2q9450/performance-comparison-buildin
  
  ## Introduction
  
-**XmlByPass** is an annotationProcessor library for Android which auto generates the java code of your xml layouts in `Source` level (before compile). That means, you can create your layouts easily and quickly with XML and get all benefits of using xml/resources meanwhile get the performance of creating views programmatically without even knowing about it! (I'm not joking , you don't need to learn anything new :))
+**XmlByPass** is an annotationProcessor library for Android which auto generates the java code of your xml layouts in `Source` level (before compile). That means, you can create your layouts easily and quickly with XML and get all benefits of using xml/resources meanwhile get the performance of creating views programmatically without even knowing about it! (Not joking, you don't need to learn anything new :))
  
-**XmlByPass** supports almost 99% of tags and attributes of XML layouts including `<include/>` and `<fragment/>`, And for other 1%, it will auto generate an style resource and applies the style to the views. That's how you can be sure it will 100% work.
+**XmlByPass** supports almost 99% of tags and attributes of XML layouts including `<include/>` and `<fragment/>`, And for other 1%, it will auto generate style resources and applies them to the views. Therefore, you can be sure it will 100% work.
 
 No need to worry about ViewBinding, **XmlByPass** adds views that have an `android:id` with their ID name as Public variables and other views are protected so still you can customize them by inheritance. (You will see sample codes in Usage)
 
@@ -94,33 +94,70 @@ This is `activity_main` (xml layout):
 ```
 
 This is the MainActivity:
+
+<details open><summary><b>Java</b></summary>
+<p>
+	
 ```java
 public class MainActivity extends AppCompatActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
-
 }
 ```
+</p></details>
+<details><summary><b>Kotlin</b></summary>
+<p>
+	
+```kotlin
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+    }
+}
+```
+</p></details>
 
-Alright, Let's include **XmlByPass**, You won't need to change xml layout at all! but this is gonna be how your MainActivity looks like: 
+<br>
+
+Alright, Let's include **XmlByPass**, You won't need to change your xml layout at all! but this is gonna be how your MainActivity looks like: 
+
+<details open><summary><b>Java</b></summary>
+<p>
+	
 ```java
 @XmlByPass(layouts = {
         @XmlLayout(layout = "activity_main", className = "ActivityMain")
 })
 public class MainActivity extends AppCompatActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(new ActivityMain(this));
     }
-
 }
 ```
+</p></details>
+<details><summary><b>Kotlin</b></summary>
+<p>
+	
+```kotlin
+@XmlByPass(layouts = {
+        @XmlLayout(layout = "activity_main", className = "ActivityMain")
+})
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(ActivityMain(this))
+    }
+}
+```
+</p></details>
+
+<br>
 
 **XmlByPass** will generate `ActivityMain` automatically, This is how the generated class looks like:
 
@@ -182,7 +219,7 @@ public class ActivityMain extends ConstraintLayout {
 
 ---
 
-By `@XmlLayout(layout = "*")` you can mark all layouts, the class name will be the name of it's layout file .
+By `@XmlLayout(layout = "*")` you can mark all layouts, So **XmlByPass** will generate a java class for each existing layout and the name of the class will be the name of it's layout file.
 
 ```java
 @XmlByPass(layouts = {@XmlLayout(layout = "*")})
@@ -259,7 +296,7 @@ public class MainActivity extends AppCompatActivity {
 By the way, In the example above, on bottom you can see a constraint layout with a simple TextView and a SmileView which both of them are added to the layout by `<include/>`
 
 ## ViewModel
-**XmlByPass** will automatically generate ViewModels for your layout which extends `androidx.lifecycle.ViewModel` and contains some LiveData variables.
+**XmlByPass** will automatically generate ViewModels which extend `androidx.lifecycle.ViewModel` for your layout and contains some LiveData variables.
 
 To use this feature, you must follow a specific structure in your xml so that **XmlByPass** can define variables correctly.
 
@@ -321,7 +358,7 @@ We just added a tag to the TextView :
 <tag android:id="@+id/myText" android:value="live;attr=text;Hello World!"/>
 ```
 
-- `android:id` name specifies the name of the variable
+- `android:id` specifies the name of the variable
 - `android:value` starts with `live;` so **XmlByPass** can undrestand this tag will be a LiveData
 - `attr=text` means the target attribute is setText(String)
 - `Hello World!` is the initial value of variable
@@ -347,19 +384,15 @@ public class MyViewModel extends ViewModel {
 }
 ```
 
-And tv observes myText in generated code of layout (YOU DON'T NEED TO KNOW ABOUT IT):
-```java
-MyViewModel viewModel = new ViewModelProvider(getViewModelOwner()).get(MyViewModel.class);
-viewModel.getMyText().observe(getOwner(), myText -> tv.setText(myText));
-```
-
 And this is how you can change data in MainActivity:
 ```java
 MyViewModel viewModel = new ViewModelProvider(this).get(MyViewModel.class);
 viewModel.setMyText("Awesome!");
 ```
 
-**I prefer to define variables first and the use them later.**
+The generated java class of your layout will automatically observe the LiveData.
+
+**I prefer to define variables first and use them later.**
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
