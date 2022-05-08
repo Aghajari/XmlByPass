@@ -74,8 +74,17 @@ And one more interesting option, **XmlByPass** brings auto generating [`ViewMode
 
 XmlByPass is available in the `mavenCentral()`, so you just need to add it as a dependency (Module gradle)
 
+Java: 
 ```gradle
 annotationProcessor 'io.github.aghajari:XmlByPass:1.0.1'
+implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.1'
+```
+
+Kotlin: 
+```gradle
+apply plugin: 'kotlin-kapt'
+
+kapt 'io.github.aghajari:XmlByPass:1.0.1'
 implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.1'
 ```
 
