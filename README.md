@@ -164,9 +164,9 @@ public class MainActivity extends AppCompatActivity {
 import com.aghajari.xmlbypass.XmlByPass
 import com.aghajari.xmlbypass.XmlLayout
 
-@XmlByPass(layouts = {
-        @XmlLayout(layout = "activity_main", className = "ActivityMain")
-})
+@XmlByPass(layouts = [
+    XmlLayout(layout = "activity_main", className = "ActivityMain")
+])
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
