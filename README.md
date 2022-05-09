@@ -1,4 +1,5 @@
 # XmlByPass
+ ![XmlByPass](./images/header.png)
  
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.aghajari/XmlByPass.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.github.aghajari/XmlByPass/1.0.1/aar)
@@ -69,6 +70,9 @@ No need to worry about ViewBinding, **XmlByPass** adds views that have an `andro
 **XmlByPass** supports all [qualifiers](https://developer.android.com/guide/topics/resources/providing-resources). Yay!
 
 And one more interesting option, **XmlByPass** brings auto generating [`ViewModel`](https://developer.android.com/topic/libraries/architecture/viewmodel) with [`LiveData`](https://developer.android.com/topic/libraries/architecture/livedata) :)
+
+
+ ![XmlByPass](./images/usage.gif)
 
 ## Installation
 
