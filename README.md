@@ -80,16 +80,16 @@ XmlByPass is available in the `mavenCentral()`, so you just need to add it as a 
 
 Java: 
 ```gradle
-annotationProcessor 'io.github.aghajari:XmlByPass:1.0.1'
-implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.1'
+annotationProcessor 'io.github.aghajari:XmlByPass:1.0.2'
+implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.2'
 ```
 
 Kotlin: 
 ```gradle
 apply plugin: 'kotlin-kapt'
 
-kapt 'io.github.aghajari:XmlByPass:1.0.1'
-implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.1'
+kapt 'io.github.aghajari:XmlByPass:1.0.2'
+implementation 'io.github.aghajari:XmlByPassAnnotations:1.0.2'
 ```
 
 ## Usage
