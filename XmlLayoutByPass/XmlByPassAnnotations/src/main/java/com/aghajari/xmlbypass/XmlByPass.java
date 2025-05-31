@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Get the highest UI performance :)
- *
+ * <p>
  * XmlByPass is an annotationProcessor library for Android
  * which auto generates the java code of your xml layouts
  * in Source level (before compile)

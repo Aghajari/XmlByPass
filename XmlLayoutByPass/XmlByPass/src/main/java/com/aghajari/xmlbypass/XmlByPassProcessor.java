@@ -241,14 +241,13 @@ public class XmlByPassProcessor extends AbstractProcessor {
             includeFragment.write(this);
 
         // create styles if needed
-        if (styles.size() > 0) {
+        if (!styles.isEmpty()) {
             StringBuilder stylesRes = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n\n");
             for (String style : styles)
                 stylesRes.append(style).append('\n');
             stylesRes.append("</resources>");
             try {
                 FileObject f = processingEnv.getFiler().createSourceFile("XmlByPassStyle");
-
                 File f2 = new File(f.toUri());
                 File f3 = f2.getParentFile().getParentFile();
                 String buildType = f3.getName();
@@ -298,7 +297,6 @@ public class XmlByPassProcessor extends AbstractProcessor {
             if (b != null)
                 write(b, packageName + "." + model.getClassName());
         }
-
     }
 
     private void write(String src, String name) {
