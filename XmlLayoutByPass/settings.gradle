@@ -1,4 +1,0 @@
-rootProject.name = "XmlLayoutByPass"
-include ':app'
-include ':XmlByPass'
-include ':XmlByPassAnnotations'
