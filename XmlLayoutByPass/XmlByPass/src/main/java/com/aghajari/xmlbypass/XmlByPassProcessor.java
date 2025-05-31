@@ -67,6 +67,18 @@ public class XmlByPassProcessor extends AbstractProcessor {
     private final IncludeFragment includeFragment = new IncludeFragment();
     private boolean needsIncludeLayout, needsIncludeFragment;
 
+    private String resourcesDirPath;
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        resourcesDirPath = processingEnv.getOptions().get("xmlByPassResDir");
+
+        if (resourcesDirPath != null) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "XmlByPass Resources directory: " + resourcesDirPath);
+        }
+    }
+
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> annotations = new HashSet<>();
@@ -307,6 +319,11 @@ public class XmlByPassProcessor extends AbstractProcessor {
     private void findLayouts() {
         if (layouts != null)
             return;
+
+        if (resourcesDirPath != null) {
+            layouts = new File(resourcesDirPath + "/layout");
+            return;
+        }
 
         Filer filer = processingEnv.getFiler();
         try {

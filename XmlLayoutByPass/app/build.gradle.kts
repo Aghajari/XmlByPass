@@ -31,6 +31,12 @@ android {
     }
 }
 
+tasks.withType<JavaCompile> {
+    val resDir = "${projectDir}/src/main/res"
+    options.compilerArgs.add("-AxmlByPassResDir=$resDir")
+    inputs.dir(resDir)
+}
+
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)

@@ -344,7 +344,6 @@ public class SourceGenerator {
 
             if (viewModelGenerator != null) {
                 out = viewModelGenerator.parse(id, value, processor, tag.name);
-                System.out.println(out);
                 if (out != null && out.isEmpty())
                     return;
             }
