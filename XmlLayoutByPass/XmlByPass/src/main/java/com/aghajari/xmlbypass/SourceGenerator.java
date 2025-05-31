@@ -32,9 +32,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 public class SourceGenerator {
@@ -64,7 +67,7 @@ public class SourceGenerator {
     private final List<String> functionsFinal = new ArrayList<>();
 
     // extra codes, such as some util functions
-    private final List<String> extraCodes = new ArrayList<>();
+    private final Set<String> extraCodes = new HashSet<>();
 
     // styles for unknown attrs
     private final List<String> styles = new ArrayList<>();
@@ -758,8 +761,7 @@ public class SourceGenerator {
      * Adds an extra code (function) at the end of source
      */
     public void addExtraCode(String src) {
-        if (!extraCodes.contains(src))
-            extraCodes.add(src);
+        extraCodes.add(src);
     }
 
     /**
@@ -888,7 +890,7 @@ public class SourceGenerator {
         }
 
         // sort imports based on packages
-        imports.sort((a, b) -> b.compareTo(a));
+        imports.sort(Comparator.reverseOrder());
     }
 
 

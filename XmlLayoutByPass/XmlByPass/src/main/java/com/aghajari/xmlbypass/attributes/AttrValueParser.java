@@ -22,6 +22,14 @@ package com.aghajari.xmlbypass.attributes;
  */
 public class AttrValueParser {
 
+    private static final String[] ATTR_STARTER = new String[] {
+            "?android:attr/",
+            "?attr/android:",
+            "?attr/",
+            "?android:",
+            "?",
+    };
+
     public static String getAnyResName(String name) {
         if (name.startsWith("attr/"))
             name = name.substring(5);
@@ -29,16 +37,36 @@ public class AttrValueParser {
         return name.replace('.', '_');
     }
 
+    private static String getAttrResName(String value) {
+        for (String starter: ATTR_STARTER) {
+            if (value.startsWith(starter))
+                return value.substring(starter.length());
+        }
+        return value;
+    }
+
+    public static String resolveAttribute(String name) {
+        boolean isAndroidR = name.contains("android:");
+
+        String resId;
+        if (isAndroidR)
+            resId = "android.R.attr." + getAttrResName(name);
+        else
+            resId = "R.attr." + getAttrResName(name);
+
+        return "resolveAttribute(" + resId + ")";
+    }
+
     public static boolean isAttrValue(String value) {
         if (!value.startsWith("?"))
             return false;
-        value = value.substring(value.startsWith("?attr/") ? 6 : 1);
-        return value.matches("^[a-zA-Z._][a-zA-Z0-9_.]*?$");
+
+        return getAttrResName(value).matches("^[a-zA-Z._][a-zA-Z0-9_.]*?$");
     }
 
     public static String parseBoolean(String value) {
         if (isAttrValue(value)) {
-            return "getResources().getBoolean(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getBoolean(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:bool/")) {
@@ -54,7 +82,7 @@ public class AttrValueParser {
 
     public static String parseDimensionInteger(String value) {
         if (isAttrValue(value)) {
-            return "getResources().getDimensionPixelSize(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getDimensionPixelSize(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:dimen/")) {
@@ -70,7 +98,7 @@ public class AttrValueParser {
 
     public static String parseDimensionFloat(String value) {
         if (isAttrValue(value)) {
-            return "getResources().getDimension(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getDimension(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:dimen/")) {
@@ -151,7 +179,7 @@ public class AttrValueParser {
 
     public static String parseInteger(String value) {
         if (isAttrValue(value)) {
-            return "getResources().getInteger(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getInteger(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:integer/")) {
@@ -170,7 +198,7 @@ public class AttrValueParser {
             return "null";
 
         if (isAttrValue(value)) {
-            return "getResources().getDrawable(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getDrawable(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:color/")) {
@@ -238,7 +266,7 @@ public class AttrValueParser {
             return "0";
 
         if (isAttrValue(value)) {
-            return "resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + ")";
+            return resolveAttribute(value);
         }
 
         if (!type.startsWith("+") && value.startsWith("@android:" + type + "/")) {
@@ -260,7 +288,7 @@ public class AttrValueParser {
             return "0";
 
         if (isAttrValue(value))
-            return "resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + ")";
+            return resolveAttribute(value);
 
         String type;
 
@@ -284,7 +312,7 @@ public class AttrValueParser {
 
     public static String parseColor(String value) {
         if (isAttrValue(value)) {
-            return "getResources().getColor(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getColor(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:color/")) {
@@ -309,7 +337,7 @@ public class AttrValueParser {
             return "\"\"";
 
         if (isAttrValue(value)) {
-            return "getResources().getString(resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + "))";
+            return "getResources().getString(" + resolveAttribute(value) + ")";
         }
 
         if (value.startsWith("@android:string/")) {
@@ -329,7 +357,7 @@ public class AttrValueParser {
     public static String parseFont(String value) {
         String resStr = null;
         if (isAttrValue(value)) {
-            resStr = "resolveAttribute(R.attr." + getAnyResName(value.substring(1)) + ")";
+            resStr = resolveAttribute(value);
         }
 
         if (resStr == null) {
@@ -358,5 +386,4 @@ public class AttrValueParser {
 
         return "androidx.core.content.res.ResourcesCompat.getFont(getContext(), " + resStr + ")";
     }
-
 }

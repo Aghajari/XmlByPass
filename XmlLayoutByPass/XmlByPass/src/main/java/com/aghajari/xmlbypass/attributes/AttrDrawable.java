@@ -65,7 +65,7 @@ public class AttrDrawable extends Attr {
 
         if (resFunc != null && !resFunc.isEmpty()) {
             if (AttrValueParser.isAttrValue(value)) {
-                return new String[]{resFunc + "(resolveAttribute(R.attr." + AttrValueParser.getAnyResName(value.substring(1)) + "))"};
+                return new String[]{resFunc + "(" + AttrValueParser.resolveAttribute(value) + ")"};
             } else if (value.startsWith("@android:drawable/")) {
                 value = value.substring("@android:drawable/".length());
                 return new String[]{resFunc + "(android.R.drawable." + AttrValueParser.getAnyResName(value) + ")"};
