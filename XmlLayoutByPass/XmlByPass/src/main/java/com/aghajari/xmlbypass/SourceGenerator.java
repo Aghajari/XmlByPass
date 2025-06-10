@@ -227,10 +227,27 @@ public class SourceGenerator {
     }
 
     /**
+     * @return true if current tag is ViewStub or android.view.ViewStub,
+     */
+    private boolean isViewStub(XmlPullParser xpp) {
+        return xpp.getName().equalsIgnoreCase(IncludeViewStub.ORIGINAL_CLASS_NAME)
+                || xpp.getName().equalsIgnoreCase(IncludeViewStub.ORIGINAL_FULL_NAME);
+    }
+
+    /**
+     * @return true if name is ViewStub or android.view.ViewStub,
+     */
+    private boolean isViewStub(String name) {
+        return name.equalsIgnoreCase(IncludeViewStub.ORIGINAL_CLASS_NAME)
+                || name.equalsIgnoreCase(IncludeViewStub.ORIGINAL_FULL_NAME);
+    }
+
+    /**
      * Changes some basic tags
      *
      * <code>view</code> to it's class
      * <code>include</code> to {@link IncludeLayout}
+     * <code>ViewStub</code> to {@link IncludeViewStub}
      * <code>fragment</code> to {@link IncludeFragment}
      * <code>FragmentContainerView</code> to {@link IncludeFragment}
      * <p>
@@ -262,6 +279,16 @@ public class SourceGenerator {
 
                 processor.createIncludeLayout();
                 return processor.getIncludeLayoutName(packageName);
+            }
+        }
+
+        if (isViewStub(xpp)) {
+            String layout = xpp.getAttributeValue(null, "android:layout");
+            if (layout != null && layout.startsWith("@layout/")) {
+                if (xmlByPass.viewStub() || processor.containsLayoutFile(layout.substring(8))) {
+                    processor.createViewStubLayout();
+                    return processor.getLayoutNameOrPutOnExtraLayouts(layout.substring(8));
+                }
             }
         }
 
@@ -404,6 +431,13 @@ public class SourceGenerator {
         String mId = "this";
         boolean q = false;
 
+        boolean isXmlByPassViewStub = isViewStub(xpp) && !isViewStub(tagName);
+        String viewStubCreationName = null;
+        if (isXmlByPassViewStub) {
+            viewStubCreationName = tagName;
+            tagName = processor.getIncludeViewStubName(packageName);
+        }
+
         // Finds a unique name for this view
         if (!thisClass) {
             if (id.supports(map)) {
@@ -447,6 +481,10 @@ public class SourceGenerator {
 
             if (layoutId != null)
                 addAttr(mId, "loadLayout(" + layoutId + ")", true);
+        }
+
+        if (isViewStub(xpp)) {
+            parseViewStubAttrs(mId, map);
         }
 
         // Adds some util functions if needed
@@ -543,9 +581,30 @@ public class SourceGenerator {
         map.remove("layout");
         if (!thisClass)
             createView(mId, false, tagName, map,
-                    checkForStyles(mId, map), createInstanceIndex);
+                    checkForStyles(mId, map), createInstanceIndex,
+                    viewStubCreationName);
 
         closeFunction();
+    }
+
+    private void parseViewStubAttrs(String viewName, HashMap<String, String> map) {
+        if (map.containsKey("android:layout")) {
+            String layoutId = null;
+            String layout = map.get("android:layout");
+
+            if (layout.startsWith("@layout/"))
+                layoutId = "R.layout." + AttrValueParser.getAnyResName(layout.substring(8));
+            else if (layout.startsWith("@android:layout/"))
+                layoutId = "android.R.layout." + AttrValueParser.getAnyResName(layout.substring(16));
+
+            if (layoutId != null)
+                addAttr(viewName, "setLayoutResource(" + layoutId + ")", true);
+        }
+
+        if (map.containsKey("android:inflatedId")) {
+            String inflatedId = Id.getOriginalViewId(map.get("android:inflatedId"));
+            addAttr(viewName, "setInflatedId(R.id." + inflatedId + ")", true);
+        }
     }
 
     /**
@@ -612,7 +671,8 @@ public class SourceGenerator {
      */
     @SuppressWarnings("SameParameterValue")
     private void createView(String id, boolean newObject, String className,
-                            HashMap<String, String> map, boolean style, int index) {
+                            HashMap<String, String> map, boolean style, int index,
+                            String viewStubCreationName) {
         String context = "getContext()";
         String styleId = "";
 
@@ -629,11 +689,19 @@ public class SourceGenerator {
             importNew(theme.imports()[0]);
         }
 
+        String creation;
+        if (viewStubCreationName != null) {
+            creation = "new " + className + "(getContext(), () -> { " +
+                    "return new " + viewStubCreationName + "(" + context + styleId + "); })";
+        } else {
+            creation = "new " + className + "(" + context + styleId + ")";
+        }
+
         String src;
         if (newObject)
-            src = className + " " + id + " = new " + className + "(" + context + styleId + ")";
+            src = className + " " + id + " = " + creation;
         else
-            src = id + " = new " + className + "(" + context + styleId + ")";
+            src = id + " = " + creation;
 
         src = "\t\t" + src + ";\n";
         tagIndexes.peek().index += src.length();

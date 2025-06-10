@@ -71,6 +71,12 @@ public @interface XmlByPass {
     boolean include() default true;
 
     /**
+     * True if XmlByPass must convert included ViewStub layout (by ViewStub tag) too
+     * False otherwise
+     */
+    boolean viewStub() default true;
+
+    /**
      * Enables or disables ViewModel
      *
      * @see XmlLayout#viewModel()

@@ -62,10 +62,12 @@ public class XmlByPassProcessor extends AbstractProcessor {
     private final ArrayList<String> extraLayouts = new ArrayList<>();
 
     // translates <include> to an instance of IncludeLayout
-    // translates <fragment> and FragmentContainerView to an instance of IncludeFragment
     private final IncludeLayout includeLayout = new IncludeLayout();
+    // translates <ViewStub> to an instance of XmlByPassViewStub
+    private final IncludeViewStub includeViewStub = new IncludeViewStub();
+    // translates <fragment> and FragmentContainerView to an instance of IncludeFragment
     private final IncludeFragment includeFragment = new IncludeFragment();
-    private boolean needsIncludeLayout, needsIncludeFragment;
+    private boolean needsIncludeLayout, needsIncludeViewStub, needsIncludeFragment;
 
     private String resourcesDirPath;
 
@@ -130,7 +132,10 @@ public class XmlByPassProcessor extends AbstractProcessor {
         extraLayouts.clear();
         layoutMap.clear();
         layoutMap2.clear();
-        needsIncludeLayout = needsIncludeFragment = false;
+        needsIncludeLayout
+                = needsIncludeViewStub
+                = needsIncludeFragment
+                = false;
 
         String packageName = null;
         XmlByPass base = null;
@@ -159,6 +164,7 @@ public class XmlByPassProcessor extends AbstractProcessor {
                     packageName = ((TypeElement) element).getQualifiedName().toString();
                     packageName = packageName.substring(0, packageName.lastIndexOf('.'));
                     includeLayout.packageName = packageName;
+                    includeViewStub.packageName = packageName;
                     includeFragment.packageName = packageName;
                 }
 
@@ -237,6 +243,8 @@ public class XmlByPassProcessor extends AbstractProcessor {
 
         if (needsIncludeLayout)
             includeLayout.write(this);
+        if (needsIncludeViewStub)
+            includeViewStub.write(this);
         if (needsIncludeFragment)
             includeFragment.write(this);
 
@@ -368,6 +376,12 @@ public class XmlByPassProcessor extends AbstractProcessor {
         layoutMap.putIfAbsent(IncludeLayout.getName().toLowerCase(), IncludeLayout.getName());
     }
 
+    public void createViewStubLayout() {
+        needsIncludeViewStub = true;
+
+        layoutMap.putIfAbsent(IncludeViewStub.getName().toLowerCase(), IncludeViewStub.getName());
+    }
+
     public void createIncludeFragment() {
         needsIncludeFragment = true;
 
@@ -379,6 +393,13 @@ public class XmlByPassProcessor extends AbstractProcessor {
             return IncludeLayout.getName();
 
         return includeLayout.getFullName();
+    }
+
+    public String getIncludeViewStubName(String packageName) {
+        if (packageName.equals(includeViewStub.packageName))
+            return IncludeViewStub.getName();
+
+        return includeViewStub.getFullName();
     }
 
     public String getIncludeFragmentName(String packageName) {
