@@ -163,9 +163,13 @@ public class SourceGenerator {
         if (files.size() > 1)
             importNew("android.content.res.Configuration");
 
+        boolean isMergeLayout = false;
         // all qualifiers must have same root view
         // and also views with same id must have same type
         String baseClass = null;
+        // all qualifiers must have same parent tag
+        String mergeParentTag = "";
+
         for (QualifierInfo qualifierInfo : files) {
             qualifier = qualifierInfo.name;
             functions.clear();
@@ -186,6 +190,11 @@ public class SourceGenerator {
                         String tagName = getRealName(xpp);
 
                         if (!isClassCreated()) {
+                            if (isMerge(xpp)) {
+                                isMergeLayout = true;
+                                mergeParentTag = getMergeParentTag(xpp);
+                            }
+
                             addClass(className, baseClass = tagName, xpp, files);
                             firstClassLoaded = true;
                         } else if (!firstClassLoaded) {
@@ -194,7 +203,19 @@ public class SourceGenerator {
                                 processor.error("The parent of the layouts with " +
                                         "different qualifiers must be same type: " + baseClass + " or " + tagName);
                             }
-                            parents.push(new Parent(tagName, "this"));
+                            if (isMergeLayout) {
+                                String newParentTag = getMergeParentTag(xpp);
+                                if (!mergeParentTag.equals(newParentTag)) {
+                                    if (mergeParentTag.isEmpty()) mergeParentTag = "EMPTY";
+                                    if (newParentTag.isEmpty()) newParentTag = "EMPTY";
+
+                                    processor.error("The parentTag of the merge with " +
+                                            "different qualifiers must be same type: " + mergeParentTag + " or " + newParentTag);
+                                }
+                                parents.push(new Parent(tagName, "_root", getMergeParentTag(xpp)));
+                            } else {
+                                parents.push(new Parent(tagName, "this"));
+                            }
                             parseAttrs(xpp, true);
                         } else
                             parseAttrs(xpp);
@@ -302,25 +323,51 @@ public class SourceGenerator {
     /**
      * Generates class structure and constructors
      */
-    private void addClass(String className, String extend, XmlPullParser xpp, ArrayList<QualifierInfo> files) {
+    private void addClass(
+            String className,
+            String extend,
+            XmlPullParser xpp,
+            ArrayList<QualifierInfo> files
+    ) {
         classCreated = true;
-        parents.push(new Parent(extend, "this"));
-
         source.append('\n');
 
-        source.append("public class ").append(className).append(" extends ").append(extend).append(" {\n\n");
-        indexForVariables = source.length();
+        boolean isMergeLayout = isMerge(xpp);
+        if (isMergeLayout) {
+            parents.push(new Parent(extend, "_root", getMergeParentTag(xpp)));
 
-        source.append("\n    public ").append(className).append("(Context context) {\n")
-                .append("        this(context, null);\n")
-                .append("    }\n")
-                .append("\n")
-                .append("    public ").append(className).append("(Context context, AttributeSet attrs) {\n")
-                .append("        this(context, attrs, 0);\n")
-                .append("    }\n")
-                .append("\n")
-                .append("    public ").append(className).append("(Context context, AttributeSet attrs, int defStyleAttr) {\n")
-                .append("        super(context, attrs, defStyleAttr);\n");
+            source.append("public class ").append(className).append(" {\n\n");
+            indexForVariables = source.length();
+            importNew("android.view.ViewGroup");
+            importNew("android.content.res.Resources");
+
+            source.append("\n    private ViewGroup _root;\n");
+            source.append("\n    private Context getContext() {\n")
+                    .append("        return _root.getContext();\n")
+                    .append("    }\n");
+            source.append("\n    private Resources getResources() {\n")
+                    .append("        return _root.getResources();\n")
+                    .append("    }\n");
+
+            source.append("\n    public ").append(className).append("(ViewGroup root) {\n")
+                    .append("        _root = root;");
+        } else {
+            parents.push(new Parent(extend, "this"));
+
+            source.append("public class ").append(className).append(" extends ").append(extend).append(" {\n\n");
+            indexForVariables = source.length();
+
+            source.append("\n    public ").append(className).append("(Context context) {\n")
+                    .append("        this(context, null);\n")
+                    .append("    }\n")
+                    .append("\n")
+                    .append("    public ").append(className).append("(Context context, AttributeSet attrs) {\n")
+                    .append("        this(context, attrs, 0);\n")
+                    .append("    }\n")
+                    .append("\n")
+                    .append("    public ").append(className).append("(Context context, AttributeSet attrs, int defStyleAttr) {\n")
+                    .append("        super(context, attrs, defStyleAttr);\n");
+        }
 
         indexForViewModel = source.length();
         source.append('\n');
@@ -341,6 +388,9 @@ public class SourceGenerator {
                         .append(inf.name.isEmpty() ? "" : "_" + inf.name).append("();\n");
                 first = false;
             }
+        }
+        if (isMergeLayout) {
+            source.append("        ").append("_root = null;\n");
         }
         source.append("    }\n\n");
         indexForFunctions = source.length();
@@ -392,7 +442,13 @@ public class SourceGenerator {
         // if previous tag hasn't closed yet, it's a view group
         // add the new view group to stack
         if (lastState == STATE_OPEN) {
-            parents.push(new Parent(lastOpenedClass, lastId));
+            if (lastOpenedClass.equalsIgnoreCase("merge") &&
+                    !parents.isEmpty() &&
+                    parents.lastElement().className.equalsIgnoreCase("merge")) {
+                parents.push(parents.lastElement());
+            } else {
+                parents.push(new Parent(lastOpenedClass, lastId));
+            }
         } else {
             lastState = STATE_OPEN;
         }
@@ -453,6 +509,11 @@ public class SourceGenerator {
                 q = mId.equals(unique);
                 addNewVariable(tagName, mId, !q);
             }
+        } else if (isMerge(xpp)) {
+            // No need to create initThis function for merge tags
+            lastId = "_root";
+            tagIndexes.push(new Tag("_root", source.length()));
+            return;
         }
         lastId = mId;
 
@@ -466,6 +527,15 @@ public class SourceGenerator {
         // We need to instantiate at the end
         // to decide we need custom style/theme or not
         int createInstanceIndex = source.length();
+
+        // merge layouts doesn't have any attribute
+        if (processor.isMergeLayout(tagName)) {
+            addAttr(mId + " = new " + tagName + "(" + parents.lastElement().id + ")", true);
+            tagIndexes.push(new Tag(mId, source.length()));
+            closeFunction();
+            return;
+        }
+
 
         // <include> tag is a little different
         if (map.containsKey("layout") &&
@@ -543,7 +613,7 @@ public class SourceGenerator {
         if (map.containsKey("android:layout_width") && map.containsKey("android:layout_height")) {
             LayoutParamsAttributesParser lp =
                     AttrFactory.findBestLayoutParamsParser(mId, thisClass && !parentClass.isEmpty() ? parentClass :
-                            parents.lastElement().className, map);
+                            parents.lastElement().getParentTag(), map);
             String[] p = lp.parse(map);
             if (p != null && p.length > 0) {
                 String var;
@@ -730,6 +800,10 @@ public class SourceGenerator {
      * android.widget.View.SubView to View
      */
     static String getClassName(String fullName) {
+        if (fullName == null) {
+            return null;
+        }
+
         String[] packages = fullName.split("\\.");
         int a = 0;
         for (String p : packages) {
@@ -775,8 +849,12 @@ public class SourceGenerator {
 
     private void importNew(String im) {
         String im2 = im.trim();
-        if (!imports.contains(im2))
-            imports.add(0, getFullName(im2));
+        if (!imports.contains(im2)) {
+            String fullName = getFullName(im2);
+            if (fullName != null) {
+                imports.add(0, fullName);
+            }
+        }
     }
 
     private void importEnd(String im) {
@@ -961,6 +1039,15 @@ public class SourceGenerator {
     }
 
 
+    private boolean isMerge(XmlPullParser xpp) {
+        return xpp.getName().equalsIgnoreCase("merge");
+    }
+
+    private String getMergeParentTag(XmlPullParser xpp) {
+        String tag = xpp.getAttributeValue(null, "tools:parentTag");
+        return tag == null ? "" : tag;
+    }
+
     // and it's done
     // burn baby burn :D
     public String build() {
@@ -1072,11 +1159,22 @@ public class SourceGenerator {
     private static class Parent {
         private final String className;
         private final String id;
+        private final String parentTag;
 
         private Parent(String className, String id) {
             this.className = className;
             this.id = id;
+            this.parentTag = null;
+        }
+
+        private Parent(String className, String id, String parentTag) {
+            this.className = className;
+            this.id = id;
+            this.parentTag = parentTag;
+        }
+
+        public String getParentTag() {
+            return (parentTag != null && !parentTag.isEmpty()) ? parentTag : className;
         }
     }
-
 }

@@ -57,6 +57,8 @@ public class XmlByPassProcessor extends AbstractProcessor {
     private final HashMap<String, String> layoutMap = new HashMap<>();
     // Map<ClassName, Id>
     private final HashMap<String, String> layoutMap2 = new HashMap<>();
+    // Layout classes that start with merge tag
+    private final HashSet<String> mergeLayouts = new HashSet<>();
 
     // <include> may add extra layouts for translation
     private final ArrayList<String> extraLayouts = new ArrayList<>();
@@ -205,22 +207,15 @@ public class XmlByPassProcessor extends AbstractProcessor {
 
         // map layout ids, for a better usage in <include>
         for (XmlLayoutSaver saver : layoutSaver) {
-            XmlPullParser xpp = new KXmlParser();
-            try {
-                xpp.setInput(new FileReader(saver.file));
-                int eventType = xpp.getEventType();
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    if (eventType == XmlPullParser.START_TAG) {
-                        String idValue = xpp.getAttributeValue(null, "android:id");
-                        if (idValue != null && idValue.startsWith("@"))
-                            layoutMap2.put(saver.className, Id.getOriginalViewId(idValue));
-
-                        break;
-                    }
-                    eventType = xpp.next();
+            openXmlLayoutFirstTag(saver.file, (xpp) -> {
+                if (xpp.getName().equalsIgnoreCase("merge")) {
+                    mergeLayouts.add(saver.className);
                 }
-            } catch (Exception ignore) {
-            }
+
+                String idValue = xpp.getAttributeValue(null, "android:id");
+                if (idValue != null && idValue.startsWith("@"))
+                    layoutMap2.put(saver.className, Id.getOriginalViewId(idValue));
+            });
         }
 
         // convert xml to code :)
@@ -274,6 +269,27 @@ public class XmlByPassProcessor extends AbstractProcessor {
             }
         }
         return true;
+    }
+
+    private void openXmlLayoutFirstTag(File file, XmlPullParserCodeBlock block) {
+        XmlPullParser xpp = new KXmlParser();
+        try {
+            xpp.setInput(new FileReader(file));
+            int eventType = xpp.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    block.run(xpp);
+                    break;
+                }
+                eventType = xpp.next();
+            }
+        } catch (Exception ignore) {
+        }
+    }
+
+    @FunctionalInterface
+    private interface XmlPullParserCodeBlock {
+        void run(XmlPullParser xpp);
     }
 
     private static class XmlLayoutSaver {
@@ -353,13 +369,26 @@ public class XmlByPassProcessor extends AbstractProcessor {
         }
     }
 
-    public String getLayoutNameOrPutOnExtraLayouts(String layoutName) {
-        if (layoutMap.containsKey(layoutName.toLowerCase()))
-            return layoutMap.get(layoutName.toLowerCase());
+    public String getLayoutNameOrPutOnExtraLayouts(final String layoutName) {
+        String layoutFileName = layoutName.toLowerCase();
+        if (layoutMap.containsKey(layoutFileName)) {
+            return layoutMap.get(layoutFileName);
+        } else {
+            final File file = new File(layouts.getAbsolutePath(), layoutFileName + ".xml");
+            openXmlLayoutFirstTag(file, (xpp) -> {
+                if (xpp.getName().equalsIgnoreCase("merge")) {
+                    mergeLayouts.add(layoutName);
+                }
+            });
 
-        extraLayouts.add(layoutName.toLowerCase());
-        layoutMap.put(layoutName.toLowerCase(), layoutName);
-        return layoutName;
+            extraLayouts.add(layoutFileName);
+            layoutMap.put(layoutFileName, layoutName);
+            return layoutName;
+        }
+    }
+
+    public boolean isMergeLayout(String className) {
+        return mergeLayouts.contains(className);
     }
 
     public boolean containsLayout(String className) {

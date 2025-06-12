@@ -32,6 +32,14 @@ public class MarginViewGroup extends ViewGroup {
     }
 
     @Override
+    public String getType(String className) {
+        if (className.equalsIgnoreCase("merge")) {
+            return "ViewGroup.MarginLayoutParams";
+        }
+        return super.getType(className);
+    }
+
+    @Override
     public List<String> parseToList(HashMap<String, String> map) {
         List<String> list = super.parseToList(map);
         parseMargin(list, map, mId);

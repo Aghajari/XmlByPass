@@ -71,6 +71,9 @@ public class ViewGroup implements LayoutParamsAttributesParser {
 
     @Override
     public String getType(String className) {
+        if (className.equalsIgnoreCase("merge")) {
+            return "ViewGroup.LayoutParams";
+        }
         return className + ".LayoutParams";
     }
 
