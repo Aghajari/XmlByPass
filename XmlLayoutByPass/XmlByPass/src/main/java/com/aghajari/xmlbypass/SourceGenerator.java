@@ -342,12 +342,13 @@ public class SourceGenerator {
             importNew("android.content.res.Resources");
 
             source.append("\n    private ViewGroup _root;\n");
-            source.append("\n    private Context getContext() {\n")
-                    .append("        return _root.getContext();\n")
-                    .append("    }\n");
-            source.append("\n    private Resources getResources() {\n")
-                    .append("        return _root.getResources();\n")
-                    .append("    }\n");
+            addExtraCode("    private Context getContext() {\n" +
+                    "        return _root.getContext();\n" +
+                    "    }\n" +
+                    "\n" +
+                    "    private Resources getResources() {\n" +
+                    "        return _root.getResources();\n" +
+                    "    }\n");
 
             source.append("\n    public ").append(className).append("(ViewGroup root) {\n")
                     .append("        _root = root;");
@@ -1100,8 +1101,7 @@ public class SourceGenerator {
             source.append(extra).append('\n');
         }
 
-        source.append("}");
-        String src = source.toString();
+        String src = source.toString().trim() + "\n}";
 
         // replace imported classes
         for (String im : imports) {
