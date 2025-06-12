@@ -1,36 +1,18 @@
-package com.aghajari.xmlbypass;
+package com.aghajari.xmlbypass.includer;
 
-import java.io.PrintWriter;
-
-import javax.tools.JavaFileObject;
-
-public class IncludeViewStub {
+public class IncludeViewStub extends IncludeSource {
 
     public final static String ORIGINAL_CLASS_NAME = "ViewStub";
     public final static String ORIGINAL_FULL_NAME = "android.view.ViewStub";
+    public final static String NAME = "XmlByPassViewStub";
 
-    public String packageName;
-
-    public static String getName() {
-        return "XmlByPassViewStub";
+    @Override
+    public String getName() {
+        return NAME;
     }
 
-    public String getFullName() {
-        return packageName + "." + getName();
-    }
-
-    public void write(XmlByPassProcessor processor) {
-        try {
-            JavaFileObject object = processor.getProcessingEnv().getFiler().createSourceFile(getFullName());
-            PrintWriter pw = new PrintWriter(object.openWriter());
-            pw.write(getSource());
-            pw.close();
-        } catch (Exception e) {
-            processor.error(e.getMessage());
-        }
-    }
-
-    private String getSource() {
+    @Override
+    String getSource(String packageName) {
         return "package " + packageName + ";\n\n" +
                 "import android.annotation.SuppressLint;\n" +
                 "import android.content.Context;\n" +

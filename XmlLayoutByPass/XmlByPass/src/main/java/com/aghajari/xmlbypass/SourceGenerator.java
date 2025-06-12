@@ -24,6 +24,9 @@ import com.aghajari.xmlbypass.attributes.initial.Id;
 import com.aghajari.xmlbypass.attributes.initial.Tag;
 import com.aghajari.xmlbypass.attributes.initial.Theme;
 import com.aghajari.xmlbypass.attributes.layoutparams.LayoutParamsAttributesParser;
+import com.aghajari.xmlbypass.includer.IncludeFragment;
+import com.aghajari.xmlbypass.includer.IncludeLayout;
+import com.aghajari.xmlbypass.includer.IncludeViewStub;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
@@ -298,8 +301,7 @@ public class SourceGenerator {
                         return processor.getLayoutNameOrPutOnExtraLayouts(layout.substring(8));
                 }
 
-                processor.createIncludeLayout();
-                return processor.getIncludeLayoutName(packageName);
+                return processor.getIncludeSourceForPackage(IncludeLayout.class, packageName);
             }
         }
 
@@ -307,15 +309,14 @@ public class SourceGenerator {
             String layout = xpp.getAttributeValue(null, "android:layout");
             if (layout != null && layout.startsWith("@layout/")) {
                 if (xmlByPass.viewStub() || processor.containsLayoutFile(layout.substring(8))) {
-                    processor.createViewStubLayout();
+                    processor.getIncludeSourceForPackage(IncludeViewStub.class, packageName);
                     return processor.getLayoutNameOrPutOnExtraLayouts(layout.substring(8));
                 }
             }
         }
 
         if (isFragment(xpp)) {
-            processor.createIncludeFragment();
-            return processor.getIncludeFragmentName(packageName);
+            return processor.getIncludeSourceForPackage(IncludeFragment.class, packageName);
         }
         return xpp.getName();
     }
@@ -492,7 +493,7 @@ public class SourceGenerator {
         String viewStubCreationName = null;
         if (isXmlByPassViewStub) {
             viewStubCreationName = tagName;
-            tagName = processor.getIncludeViewStubName(packageName);
+            tagName = processor.getIncludeSourceForPackage(IncludeViewStub.class, packageName);
         }
 
         // Finds a unique name for this view
@@ -541,7 +542,7 @@ public class SourceGenerator {
         // <include> tag is a little different
         if (map.containsKey("layout") &&
                 xpp.getName().equals("include") &&
-                tagName.endsWith(IncludeLayout.getName())) {
+                tagName.endsWith(IncludeLayout.NAME)) {
             String layoutId = null;
             String layout = map.get("layout");
 
@@ -597,7 +598,7 @@ public class SourceGenerator {
 
         // fragment is a little different
         if (isFragment(xpp) &&
-                tagName.endsWith(IncludeFragment.getName())) {
+                tagName.endsWith(IncludeFragment.NAME)) {
             String cls;
             if (map.containsKey("android:name"))
                 cls = map.get("android:name").trim();

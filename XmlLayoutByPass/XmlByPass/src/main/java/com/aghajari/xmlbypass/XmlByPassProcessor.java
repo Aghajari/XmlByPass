@@ -19,6 +19,10 @@ package com.aghajari.xmlbypass;
 
 import com.aghajari.xmlbypass.attributes.AttrFactory;
 import com.aghajari.xmlbypass.attributes.initial.Id;
+import com.aghajari.xmlbypass.includer.IncludeFragment;
+import com.aghajari.xmlbypass.includer.IncludeLayout;
+import com.aghajari.xmlbypass.includer.IncludeSource;
+import com.aghajari.xmlbypass.includer.IncludeViewStub;
 import com.google.auto.service.AutoService;
 
 import org.kxml2.io.KXmlParser;
@@ -50,6 +54,14 @@ import javax.tools.JavaFileObject;
 @AutoService(Processor.class)
 public class XmlByPassProcessor extends AbstractProcessor {
 
+    private static final HashMap<Class<? extends IncludeSource>, IncludeSource> INC_SOURCES = new HashMap<>();
+
+    static {
+        INC_SOURCES.put(IncludeViewStub.class, new IncludeViewStub());
+        INC_SOURCES.put(IncludeLayout.class, new IncludeLayout());
+        INC_SOURCES.put(IncludeFragment.class, new IncludeFragment());
+    }
+
     // android resource layouts path
     private static File layouts;
 
@@ -62,14 +74,6 @@ public class XmlByPassProcessor extends AbstractProcessor {
 
     // <include> may add extra layouts for translation
     private final ArrayList<String> extraLayouts = new ArrayList<>();
-
-    // translates <include> to an instance of IncludeLayout
-    private final IncludeLayout includeLayout = new IncludeLayout();
-    // translates <ViewStub> to an instance of XmlByPassViewStub
-    private final IncludeViewStub includeViewStub = new IncludeViewStub();
-    // translates <fragment> and FragmentContainerView to an instance of IncludeFragment
-    private final IncludeFragment includeFragment = new IncludeFragment();
-    private boolean needsIncludeLayout, needsIncludeViewStub, needsIncludeFragment;
 
     private String resourcesDirPath;
 
@@ -134,10 +138,7 @@ public class XmlByPassProcessor extends AbstractProcessor {
         extraLayouts.clear();
         layoutMap.clear();
         layoutMap2.clear();
-        needsIncludeLayout
-                = needsIncludeViewStub
-                = needsIncludeFragment
-                = false;
+        INC_SOURCES.values().forEach(IncludeSource::detach);
 
         String packageName = null;
         XmlByPass base = null;
@@ -165,9 +166,7 @@ public class XmlByPassProcessor extends AbstractProcessor {
                 if (packageName == null) {
                     packageName = ((TypeElement) element).getQualifiedName().toString();
                     packageName = packageName.substring(0, packageName.lastIndexOf('.'));
-                    includeLayout.packageName = packageName;
-                    includeViewStub.packageName = packageName;
-                    includeFragment.packageName = packageName;
+                    applyPackageName(packageName);
                 }
 
                 if (xml.layout().equalsIgnoreCase("*")) {
@@ -236,12 +235,7 @@ public class XmlByPassProcessor extends AbstractProcessor {
             }
         }
 
-        if (needsIncludeLayout)
-            includeLayout.write(this);
-        if (needsIncludeViewStub)
-            includeViewStub.write(this);
-        if (needsIncludeFragment)
-            includeFragment.write(this);
+        INC_SOURCES.values().forEach((s) -> s.write(this));
 
         // create styles if needed
         if (!styles.isEmpty()) {
@@ -269,6 +263,11 @@ public class XmlByPassProcessor extends AbstractProcessor {
             }
         }
         return true;
+    }
+
+    private void applyPackageName(final String packageName) {
+        INC_SOURCES.values()
+                .forEach((s) -> s.setPackageName(packageName));
     }
 
     private void openXmlLayoutFirstTag(File file, XmlPullParserCodeBlock block) {
@@ -399,43 +398,18 @@ public class XmlByPassProcessor extends AbstractProcessor {
         return layoutMap.containsKey(fileName.toLowerCase());
     }
 
-    public void createIncludeLayout() {
-        needsIncludeLayout = true;
-
-        layoutMap.putIfAbsent(IncludeLayout.getName().toLowerCase(), IncludeLayout.getName());
-    }
-
-    public void createViewStubLayout() {
-        needsIncludeViewStub = true;
-
-        layoutMap.putIfAbsent(IncludeViewStub.getName().toLowerCase(), IncludeViewStub.getName());
-    }
-
-    public void createIncludeFragment() {
-        needsIncludeFragment = true;
-
-        layoutMap.putIfAbsent(IncludeFragment.getName().toLowerCase(), IncludeFragment.getName());
-    }
-
-    public String getIncludeLayoutName(String packageName) {
-        if (packageName.equals(includeLayout.packageName))
-            return IncludeLayout.getName();
-
-        return includeLayout.getFullName();
-    }
-
-    public String getIncludeViewStubName(String packageName) {
-        if (packageName.equals(includeViewStub.packageName))
-            return IncludeViewStub.getName();
-
-        return includeViewStub.getFullName();
-    }
-
-    public String getIncludeFragmentName(String packageName) {
-        if (packageName.equals(includeFragment.packageName))
-            return IncludeFragment.getName();
-
-        return includeFragment.getFullName();
+    public String getIncludeSourceForPackage(
+            Class<? extends IncludeSource> clz,
+            String packageName
+    ) {
+        IncludeSource source = INC_SOURCES.get(clz);
+        if (source == null) {
+            error("Source " + clz.getName() + " not found!");
+        }
+        assert source != null;
+        source.attach();
+        layoutMap.putIfAbsent(source.getName().toLowerCase(), source.getName());
+        return source.getNameForPackage(packageName);
     }
 
     public String getLayoutId(String className, String def) {

@@ -15,36 +15,19 @@
  *
  */
 
-package com.aghajari.xmlbypass;
+package com.aghajari.xmlbypass.includer;
 
-import java.io.PrintWriter;
+public class IncludeFragment extends IncludeSource {
 
-import javax.tools.JavaFileObject;
+    public static final String NAME = "IncludeFragment";
 
-public class IncludeFragment {
-
-    public String packageName;
-
-    public static String getName(){
-        return "IncludeFragment";
+    @Override
+    public String getName() {
+        return NAME;
     }
 
-    public String getFullName() {
-        return packageName + "." + getName();
-    }
-
-    public void write(XmlByPassProcessor processor){
-        try {
-            JavaFileObject object = processor.getProcessingEnv().getFiler().createSourceFile(getFullName());
-            PrintWriter pw = new PrintWriter(object.openWriter());
-            pw.write(getSource());
-            pw.close();
-        } catch (Exception e) {
-            processor.error(e.getMessage());
-        }
-    }
-
-    private String getSource() {
+    @Override
+    String getSource(String packageName) {
         return "package " + packageName + ";\n\n" +
                 "import android.content.Context;\n" +
                 "import android.content.ContextWrapper;\n" +
