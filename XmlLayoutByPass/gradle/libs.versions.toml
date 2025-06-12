@@ -7,6 +7,13 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 kxml2 = "2.4.1"
 material = "1.12.0"
+benchmark = "1.4.0-beta02"
+runner = "1.6.2"
+kotlin = "2.0.21"
+
+composeBom = "2025.06.00"
+activityCompose = "1.10.1"
+coreKtx = "1.16.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -16,7 +23,27 @@ ext-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kxml2 = { module = "com.github.kobjects:kxml2", version.ref = "kxml2" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
+runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmark" }
+benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
+benchmark-macro = { group = "androidx.benchmark", name = "benchmark-macro", version.ref = "benchmark" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+
+# Compose libraries
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-
+android-library = { id = "com.android.library", version.ref = "agp" }
+benchmark = { id = "androidx.benchmark", version.ref = "benchmark" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+test = { id = "com.android.test", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

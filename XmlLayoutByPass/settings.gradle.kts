@@ -24,3 +24,6 @@ rootProject.name = "XmlLayoutByPass"
 include(":app")
 include(":XmlByPass")
 include(":XmlByPassAnnotations")
+include(":benchmark")
+include(":benchmark:content")
+include(":microbenchmark")
