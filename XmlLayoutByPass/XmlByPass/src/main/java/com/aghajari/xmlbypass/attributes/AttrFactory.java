@@ -38,6 +38,7 @@ import com.aghajari.xmlbypass.attributes.layoutparams.ConstraintLayout;
 import com.aghajari.xmlbypass.attributes.layoutparams.FrameLayout;
 import com.aghajari.xmlbypass.attributes.layoutparams.GridLayout;
 import com.aghajari.xmlbypass.attributes.layoutparams.LayoutParamsAttributesParser;
+import com.aghajari.xmlbypass.attributes.layoutparams.LinearLayout;
 import com.aghajari.xmlbypass.attributes.layoutparams.MarginViewGroup;
 import com.aghajari.xmlbypass.attributes.layoutparams.RelativeLayout;
 import com.aghajari.xmlbypass.attributes.text.AutoSize;
@@ -86,7 +87,7 @@ public class AttrFactory {
         if (className.equalsIgnoreCase("LinearLayout") ||
                 className.equalsIgnoreCase("android.widget.LinearLayout") ||
                 map.containsKey("android:layout_weight"))
-            return new RelativeLayout(id, "LinearLayout");
+            return new LinearLayout(id, "LinearLayout");
 
         if (className.equalsIgnoreCase("GridLayout")
                 || className.equalsIgnoreCase("android.widget.GridLayout")
