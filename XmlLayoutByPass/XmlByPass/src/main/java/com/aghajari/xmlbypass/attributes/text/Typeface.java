@@ -17,6 +17,7 @@
 
 package com.aghajari.xmlbypass.attributes.text;
 
+import com.aghajari.xmlbypass.SourceGenerator;
 import com.aghajari.xmlbypass.attributes.AttrValueParser;
 import com.aghajari.xmlbypass.attributes.AttributesParser;
 
@@ -71,7 +72,7 @@ public class Typeface implements AttributesParser {
     }
 
     @Override
-    public String[] parse(HashMap<String, String> map, String viewName) {
+    public String[] parse(HashMap<String, String> map, String viewName, SourceGenerator ignoredGenerator) {
 
         String value;
         String style = null, font = null;

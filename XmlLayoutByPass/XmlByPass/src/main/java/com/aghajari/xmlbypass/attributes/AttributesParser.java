@@ -43,7 +43,7 @@ public interface AttributesParser {
      */
     String[] parse(HashMap<String, String> map);
 
-    default String[] parse(HashMap<String, String> map, String viewName) {
+    default String[] parse(HashMap<String, String> map, String viewName, SourceGenerator generator) {
         return parse(map);
     }
 
@@ -58,7 +58,7 @@ public interface AttributesParser {
     }
 
     /**
-     * @return true if you want to use {@link #parse(HashMap, String)},
+     * @return true if you want to use {@link #parse(HashMap, String, SourceGenerator)},
      * false if you want to simply use {@link #parse(HashMap)}.
      * You can also add extra codes to source here
      */

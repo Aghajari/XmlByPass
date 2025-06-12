@@ -17,6 +17,7 @@
 
 package com.aghajari.xmlbypass.attributes.text;
 
+import com.aghajari.xmlbypass.SourceGenerator;
 import com.aghajari.xmlbypass.attributes.AttrValueParser;
 import com.aghajari.xmlbypass.attributes.AttributesParser;
 
@@ -58,7 +59,7 @@ public class AutoSize implements AttributesParser {
     }
 
     @Override
-    public String[] parse(HashMap<String, String> map, String viewName) {
+    public String[] parse(HashMap<String, String> map, String viewName, SourceGenerator ignoredGenerator) {
         boolean onlyType = false;
 
         String value;

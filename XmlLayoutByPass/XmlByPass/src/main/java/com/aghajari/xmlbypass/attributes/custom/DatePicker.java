@@ -56,7 +56,7 @@ public class DatePicker implements AttributesParser {
     }
 
     @Override
-    public String[] parse(HashMap<String, String> map, String mId) {
+    public String[] parse(HashMap<String, String> map, String mId, SourceGenerator ignoredGenerator) {
         String minDate = null, maxDate = null;
 
         if (map.containsKey(KEYS[0]))

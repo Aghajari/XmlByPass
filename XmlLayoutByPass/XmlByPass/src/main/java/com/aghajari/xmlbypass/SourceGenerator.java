@@ -26,6 +26,7 @@ import com.aghajari.xmlbypass.attributes.initial.Theme;
 import com.aghajari.xmlbypass.attributes.layoutparams.LayoutParamsAttributesParser;
 import com.aghajari.xmlbypass.includer.IncludeFragment;
 import com.aghajari.xmlbypass.includer.IncludeLayout;
+import com.aghajari.xmlbypass.includer.IncludeOnClick;
 import com.aghajari.xmlbypass.includer.IncludeViewStub;
 
 import org.kxml2.io.KXmlParser;
@@ -572,7 +573,7 @@ public class SourceGenerator {
                 parser = id;
 
             if (parser != null && parser.supports(map, tagName)) {
-                String[] p = parser.parse(map, mId);
+                String[] p = parser.parse(map, mId, this);
                 if (p != null && p.length > 0) {
                     if (parser.needsToAddIdAtFirst(this)) {
                         for (String p2 : p)
@@ -1040,7 +1041,6 @@ public class SourceGenerator {
         imports.sort(Comparator.reverseOrder());
     }
 
-
     private boolean isMerge(XmlPullParser xpp) {
         return xpp.getName().equalsIgnoreCase("merge");
     }
@@ -1048,6 +1048,10 @@ public class SourceGenerator {
     private String getMergeParentTag(XmlPullParser xpp) {
         String tag = xpp.getAttributeValue(null, "tools:parentTag");
         return tag == null ? "" : tag;
+    }
+
+    public String getOnClickListenerClassName() {
+        return processor.getIncludeSourceForPackage(IncludeOnClick.class, packageName);
     }
 
     // and it's done

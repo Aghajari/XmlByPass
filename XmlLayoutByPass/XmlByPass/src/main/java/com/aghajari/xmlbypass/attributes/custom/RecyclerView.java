@@ -57,7 +57,7 @@ public class RecyclerView implements AttributesParser {
     }
 
     @Override
-    public String[] parse(HashMap<String, String> map, String mId) {
+    public String[] parse(HashMap<String, String> map, String mId, SourceGenerator ignoredGenerator) {
         ArrayList<String> out = new ArrayList<>();
         String layoutManager = map.get(KEYS[0]);
 

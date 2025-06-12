@@ -21,6 +21,7 @@ import com.aghajari.xmlbypass.attributes.AttrFactory;
 import com.aghajari.xmlbypass.attributes.initial.Id;
 import com.aghajari.xmlbypass.includer.IncludeFragment;
 import com.aghajari.xmlbypass.includer.IncludeLayout;
+import com.aghajari.xmlbypass.includer.IncludeOnClick;
 import com.aghajari.xmlbypass.includer.IncludeSource;
 import com.aghajari.xmlbypass.includer.IncludeViewStub;
 import com.google.auto.service.AutoService;
@@ -60,6 +61,7 @@ public class XmlByPassProcessor extends AbstractProcessor {
         INC_SOURCES.put(IncludeViewStub.class, new IncludeViewStub());
         INC_SOURCES.put(IncludeLayout.class, new IncludeLayout());
         INC_SOURCES.put(IncludeFragment.class, new IncludeFragment());
+        INC_SOURCES.put(IncludeOnClick.class, new IncludeOnClick());
     }
 
     // android resource layouts path

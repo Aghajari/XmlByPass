@@ -58,7 +58,7 @@ public class TableLayout implements AttributesParser {
     }
 
     @Override
-    public String[] parse(HashMap<String, String> map, String mId) {
+    public String[] parse(HashMap<String, String> map, String mId, SourceGenerator ignoredGenerator) {
         String stretchColumns, shrinkColumns, collapseColumns;
         stretchColumns = shrinkColumns = collapseColumns = null;
 

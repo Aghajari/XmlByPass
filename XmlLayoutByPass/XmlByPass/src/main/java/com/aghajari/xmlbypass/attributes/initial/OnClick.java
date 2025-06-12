@@ -28,7 +28,7 @@ public class OnClick implements AttributesParser {
 
     @Override
     public String[] getKeys() {
-        return new String[] {ANDROID_ON_CLICK};
+        return new String[]{ANDROID_ON_CLICK};
     }
 
     @Override
@@ -38,39 +38,28 @@ public class OnClick implements AttributesParser {
 
     @Override
     public String[] parse(HashMap<String, String> map) {
-        String value = AttrValueParser.parseString(map.get(ANDROID_ON_CLICK));
-        map.remove(ANDROID_ON_CLICK);
-
-        return new String[] {"setOnClickListener(v -> onClick(v, " + value + "))"};
+        return null;
     }
 
     @Override
-    public boolean needsToAddIdAtFirst(SourceGenerator generator) {
-        generator.addExtraCode(getExtraCode());
-        return true;
+    public String[] parse(HashMap<String, String> map, String viewName, SourceGenerator generator) {
+        String value = AttrValueParser.parseString(map.get(ANDROID_ON_CLICK));
+        map.remove(ANDROID_ON_CLICK);
+
+        String onClickClass = generator.getOnClickListenerClassName();
+
+        return new String[]{
+                "setOnClickListener(new " + onClickClass + "(" + value + "))"
+        };
     }
 
     @Override
     public String[] imports() {
-        return new String[] {
+        return new String[]{
                 "android.content.ContextWrapper",
                 "android.view.View",
                 "android.content.Context",
                 "androidx.lifecycle.LifecycleOwner"
         };
-    }
-
-    private static String getExtraCode(){
-        return "    protected void onClick(View view, String method) {\n" +
-                "        Context result = view.getContext();\n" +
-                "        while (result instanceof ContextWrapper && !(result instanceof LifecycleOwner))\n" +
-                "            result = ((ContextWrapper) result).getBaseContext();\n" +
-                "        \n" +
-                "        try {\n" +
-                "            result.getClass().getMethod(method, View.class).invoke(result, view);\n" +
-                "        } catch (Exception e) {\n" +
-                "            e.printStackTrace();\n" +
-                "        }\n" +
-                "    }\n";
     }
 }
